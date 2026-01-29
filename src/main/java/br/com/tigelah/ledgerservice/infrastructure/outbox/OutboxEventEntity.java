@@ -30,14 +30,13 @@ public class OutboxEventEntity {
     @Column(name = "message_key", nullable = false)
     public String messageKey;
 
-    @Lob
-    @Column(name = "payload_json", nullable = false)
+    @Column(name = "payload_json", nullable = false, columnDefinition = "text")
     public String payloadJson;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     public String status;
 
-    @Column(nullable = false)
+    @Column(name = "attempts", nullable = false)
     public int attempts;
 
     @Column(name = "created_at", nullable = false)
