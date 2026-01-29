@@ -1,0 +1,23 @@
+
+<mxfile host="app.diagrams.net">
+  <diagram name="Ledger Flow">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="merchant" value="Merchant" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="40" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="orchestrator" value="Payment Orchestrator" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="40" width="180" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="issuer" value="Issuer" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="40" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="ledger" value="Ledger Service" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="40" width="140" height="40" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
