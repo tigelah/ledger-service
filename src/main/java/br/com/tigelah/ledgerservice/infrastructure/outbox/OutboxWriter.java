@@ -1,4 +1,31 @@
 package br.com.tigelah.ledgerservice.infrastructure.outbox;
 
+import org.springframework.stereotype.Component;
+
+import java.time.Clock;
+import java.util.UUID;
+
+@Component
 public class OutboxWriter {
+    private final JpaOutboxRepository repo;
+    private final Clock clock;
+
+    public OutboxWriter(JpaOutboxRepository repo, Clock clock) {
+        this.repo = repo;
+        this.clock = clock;
+    }
+
+    public void enqueue(String aggregateType, UUID aggregateId, String topic, String key, String payloadJson) {
+        var e = new OutboxEventEntity();
+        e.id = UUID.randomUUID();
+        e.aggregateType = aggregateType;
+        e.aggregateId = aggregateId;
+        e.topic = topic;
+        e.messageKey = key;
+        e.payloadJson = payloadJson;
+        e.status = OutboxStatus.PENDING.name();
+        e.attempts = 0;
+        e.createdAt = clock.instant();
+        repo.save(e);
+    }
 }

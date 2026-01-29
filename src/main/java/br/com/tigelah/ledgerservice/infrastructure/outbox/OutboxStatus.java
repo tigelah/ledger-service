@@ -1,4 +1,5 @@
 package br.com.tigelah.ledgerservice.infrastructure.outbox;
 
-public class OutboxStatus {
+public enum OutboxStatus {
+    PENDING, SENT, FAILED
 }
