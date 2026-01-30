@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public class RecordCaptureUseCase {
 
-    private final EntryReposzitory entries;
+    private final EntryRepository entries;
     private final SpendCounterRepository counters;
     private final Clock clock;
 

@@ -1,5 +1,6 @@
 package br.com.tigelah.ledgerservice.application.usecase;
 
+import br.com.tigelah.ledgerservice.domain.model.EntryType;
 import br.com.tigelah.ledgerservice.domain.model.LedgerAccount;
 import br.com.tigelah.ledgerservice.domain.model.LedgerEntry;
 import br.com.tigelah.ledgerservice.domain.ports.AccountRepository;
@@ -26,7 +27,6 @@ class GetAvailableCreditUseCaseTest {
 
         EntryRepository entries = new EntryRepository() {
             @Override public void append(LedgerEntry entry) {}
-            @Override public List<br.com.tigelah.ledgerservice.domain.model.LedgerEntry> findByAccountId(UUID accountId) { return List.of(); }
             @Override public long sumHoldDebits(UUID accountId) { return 30; }
             @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) { return false; }
 
@@ -57,7 +57,6 @@ class GetAvailableCreditUseCaseTest {
         };
         EntryRepository entries = new EntryRepository() {
             @Override public void append(LedgerEntry entry) {}
-            @Override public List<LedgerEntry> findByAccountId(UUID accountId) { return List.of(); }
             @Override public long sumHoldDebits(UUID accountId) { return 0; }
             @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) { return false; }
 
@@ -90,12 +89,6 @@ class GetAvailableCreditUseCaseTest {
 
         EntryRepository entries = new EntryRepository() {
             @Override public void append(LedgerEntry entry) {}
-
-            @Override
-            public List<LedgerEntry> findByAccountId(UUID accountId) {
-                return List.of();
-            }
-
             @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) { return false; }
             @Override public long sumHoldDebits(UUID accountId) { return 30; }
 

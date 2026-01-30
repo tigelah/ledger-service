@@ -32,9 +32,18 @@ class RecordHoldFromAuthorizationUseCaseTest {
         EntryRepository entries = new EntryRepository() {
             boolean exists = false;
             @Override public void append(LedgerEntry entry) { appended.add(entry); exists = true; }
-            @Override public List<LedgerEntry> findByAccountId(UUID accountId) { return List.of(); }
             @Override public long sumHoldDebits(UUID accountId) { return 0; }
             @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) { return exists; }
+
+            @Override
+            public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
+                return false;
+            }
+
+            @Override
+            public long sumCaptureDebits(UUID accountId) {
+                return 0;
+            }
         };
 
         var uc = new RecordHoldFromAuthorizationUseCase(accounts, entries, clock);
@@ -65,9 +74,18 @@ class RecordHoldFromAuthorizationUseCaseTest {
 
         EntryRepository entries = new EntryRepository() {
             @Override public void append(LedgerEntry entry) {}
-            @Override public List<LedgerEntry> findByAccountId(UUID accountId) { return List.of(); }
             @Override public long sumHoldDebits(UUID accountId) { return 0; }
             @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) { return false; }
+
+            @Override
+            public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
+                return false;
+            }
+
+            @Override
+            public long sumCaptureDebits(UUID accountId) {
+                return 0;
+            }
         };
 
         var uc = new RecordHoldFromAuthorizationUseCase(accounts, entries, clock);

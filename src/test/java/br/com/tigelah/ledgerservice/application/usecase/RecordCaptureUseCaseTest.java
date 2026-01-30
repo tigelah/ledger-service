@@ -25,10 +25,6 @@ class RecordCaptureUseCaseTest {
                 if (entry.entryType() == EntryType.CAPTURE) capturedExists = true;
             }
 
-            @Override
-            public List<LedgerEntry> findByAccountId(UUID accountId) {
-                return List.of();
-            }
 
             @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
                 return capturedExists && "CAPTURE".equals(entryType);
@@ -73,12 +69,6 @@ class RecordCaptureUseCaseTest {
     void idempotent_when_capture_already_exists() {
         EntryRepository entries = new EntryRepository() {
             @Override public void append(LedgerEntry entry) { fail("should_not_append"); }
-
-            @Override
-            public List<LedgerEntry> findByAccountId(UUID accountId) {
-                return List.of();
-            }
-
             @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) { return true; }
             @Override public long sumHoldDebits(UUID accountId) { return 0; }
 

@@ -1,6 +1,7 @@
 package br.com.tigelah.ledgerservice.application.handlers;
 
 import br.com.tigelah.ledgerservice.application.usecase.RecordHoldFromAuthorizationUseCase;
+import br.com.tigelah.ledgerservice.domain.model.EntryType;
 import br.com.tigelah.ledgerservice.domain.model.LedgerAccount;
 import br.com.tigelah.ledgerservice.domain.model.LedgerEntry;
 import br.com.tigelah.ledgerservice.domain.ports.AccountRepository;
@@ -49,12 +50,19 @@ class AuthorizationEventHandlerTest {
                 return holdsByPaymentId.contains(paymentId);
             }
 
+            @Override
+            public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
+                return false;
+            }
+
+            @Override
+            public long sumCaptureDebits(UUID accountId) {
+                return 0;
+            }
+
             @Override public void append(LedgerEntry entry) {
                 holdsByPaymentId.add(entry.paymentId());
             }
-
-            @Override public List<LedgerEntry> findByAccountId(UUID accountId) { return List.of(); }
-
             @Override public long sumHoldDebits(UUID accountId) { return 0; }
         };
 

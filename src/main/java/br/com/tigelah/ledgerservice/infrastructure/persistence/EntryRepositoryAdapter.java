@@ -33,21 +33,16 @@ public class EntryRepositoryAdapter implements EntryRepository {
         e.correlationId = entry.correlationId();
         repo.save(e);
     }
-
-    @Override
-    public List<LedgerEntry> findByAccountId(UUID accountId) {
-        return repo.findByAccountId(accountId).stream().map(this::toDomain).toList();
-    }
-
-    @Override
-    public long sumHoldDebits(UUID accountId) {
-        return repo.sumHoldDebits(accountId);
-    }
-
     @Override
     public boolean existsHoldForPayment(UUID accountId, UUID paymentId) {
         return repo.existsByAccountIdAndPaymentIdAndEntryType(accountId, paymentId, EntryType.HOLD.name());
     }
+
+    @Override
+    public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
+        return false;
+    }
+
 
     private LedgerEntry toDomain(LedgerEntryEntity e) {
         return new LedgerEntry(
@@ -56,5 +51,15 @@ public class EntryRepositoryAdapter implements EntryRepository {
                 EntryDirection.valueOf(e.direction),
                 e.amountCents, e.currency, e.occurredAt, e.correlationId
         );
+    }
+
+    @Override
+    public long sumHoldDebits(UUID accountId) {
+        return repo.sumHoldDebits(accountId);
+    }
+
+    @Override
+    public long sumCaptureDebits(UUID accountId) {
+        return repo.sumCaptureDebits(accountId);
     }
 }
