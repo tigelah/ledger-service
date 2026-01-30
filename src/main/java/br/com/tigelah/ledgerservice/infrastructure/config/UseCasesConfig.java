@@ -2,10 +2,7 @@ package br.com.tigelah.ledgerservice.infrastructure.config;
 
 import br.com.tigelah.ledgerservice.application.handlers.AuthorizationEventHandler;
 import br.com.tigelah.ledgerservice.application.usecase.*;
-import br.com.tigelah.ledgerservice.domain.ports.AccountRepository;
-import br.com.tigelah.ledgerservice.domain.ports.EntryRepository;
-import br.com.tigelah.ledgerservice.domain.ports.EventPublisher;
-import br.com.tigelah.ledgerservice.domain.ports.LimitRuleRepository;
+import br.com.tigelah.ledgerservice.domain.ports.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,5 +40,10 @@ public class UseCasesConfig {
     @Bean
     GetLimitRuleUseCase getLimitRuleUseCase(LimitRuleRepository repo) {
         return new GetLimitRuleUseCase(repo);
+    }
+
+    @Bean
+    RecordCaptureUseCase recordCaptureUseCase(EntryRepository entries, SpendCounterRepository counters, Clock clock) {
+        return new RecordCaptureUseCase(entries, counters, clock);
     }
 }

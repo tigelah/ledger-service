@@ -10,4 +10,6 @@ public interface EntryRepository {
     List<LedgerEntry> findByAccountId(UUID accountId);
     long sumHoldDebits(UUID accountId);
     boolean existsHoldForPayment(UUID accountId, UUID paymentId);
+    boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType);
+    long sumCaptureDebits(UUID accountId);
 }
