@@ -46,4 +46,5 @@ public class UseCasesConfig {
     RecordCaptureUseCase recordCaptureUseCase(EntryRepository entries, SpendCounterRepository counters, Clock clock) {
         return new RecordCaptureUseCase(entries, counters, clock);
     }
+
 }

@@ -29,7 +29,7 @@ class LedgerAccountsControllerTest {
 
         var accountId = UUID.randomUUID();
         Mockito.when(avail.execute(accountId))
-                .thenReturn(new GetAvailableCreditUseCase.AvailableCredit(accountId, 90, "BRL"));
+                .thenReturn(new GetAvailableCreditUseCase.AvailableCredit.execute(accountId, 90, "BRL"));
 
         var c = new LedgerAccountsController(create, avail);
         var resp = c.getAvailable(accountId);

@@ -6,6 +6,7 @@ import br.com.tigelah.ledgerservice.domain.ports.EntryRepository;
 import java.util.UUID;
 
 public class GetAvailableCreditUseCase {
+
     private final AccountRepository accounts;
     private final EntryRepository entries;
 
@@ -15,12 +16,15 @@ public class GetAvailableCreditUseCase {
     }
 
     public AvailableCredit execute(UUID accountId) {
-        var account = accounts.findById(accountId).orElseThrow(() -> new IllegalArgumentException("account_not_found"));
+        var acc = accounts.findById(accountId).orElseThrow(() -> new IllegalArgumentException("account_not_found"));
+
         long holds = entries.sumHoldDebits(accountId);
-        long available = account.creditLimitCents() - holds;
+        long captures = entries.sumCaptureDebits(accountId);
+
+        long available = acc.creditLimitCents() - holds - captures;
         if (available < 0) available = 0;
-        return new AvailableCredit(account.id(), available, account.currency());
+
+        return new AvailableCredit(acc.id(), available, acc.currency(), holds, captures);
     }
 
-    public record AvailableCredit(UUID accountId, long availableCents, String currency) {}
 }

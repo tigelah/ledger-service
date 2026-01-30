@@ -43,8 +43,8 @@ public class LimitsController {
     private ResponseEntity<?> doUpsert(LimitScopeType type, String key, LimitRuleRequest req) {
         if (req == null) return ResponseEntity.badRequest().body("payload_required");
         try {
-            var currency = (req.currency == null || req.currency.isBlank()) ? "BRL" : req.currency;
-            var out = upsert.execute(type, key, currency, req.creditLimitCents, req.dailyLimitCents, req.monthlyLimitCents);
+            var currency = (req.currency() == null || req.currency().isBlank()) ? "BRL" : req.currency();
+            var out = upsert.execute(type, key, currency, req.creditLimitCents(), req.dailyLimitCents(), req.monthlyLimitCents());
             return ResponseEntity.ok(LimitRuleResponse.from(out));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -61,3 +61,4 @@ public class LimitsController {
         }
     }
 }
+
