@@ -4,9 +4,11 @@ import br.com.tigelah.ledgerservice.application.handlers.AuthorizationEventHandl
 import br.com.tigelah.ledgerservice.application.usecase.CreateAccountUseCase;
 import br.com.tigelah.ledgerservice.application.usecase.GetAvailableCreditUseCase;
 import br.com.tigelah.ledgerservice.application.usecase.RecordHoldFromAuthorizationUseCase;
+import br.com.tigelah.ledgerservice.application.usecase.UpsertLimitRuleUseCase;
 import br.com.tigelah.ledgerservice.domain.ports.AccountRepository;
 import br.com.tigelah.ledgerservice.domain.ports.EntryRepository;
 import br.com.tigelah.ledgerservice.domain.ports.EventPublisher;
+import br.com.tigelah.ledgerservice.domain.ports.LimitRuleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,5 +36,10 @@ public class UseCasesConfig {
     @Bean
     AuthorizationEventHandler authorizationEventHandler(RecordHoldFromAuthorizationUseCase uc, EventPublisher events, ObjectMapper mapper) {
         return new AuthorizationEventHandler(uc, events, mapper);
+    }
+
+    @Bean
+    UpsertLimitRuleUseCase upsertLimitRuleUseCase(LimitRuleRepository repo, Clock clock) {
+        return new UpsertLimitRuleUseCase(repo, clock);
     }
 }
