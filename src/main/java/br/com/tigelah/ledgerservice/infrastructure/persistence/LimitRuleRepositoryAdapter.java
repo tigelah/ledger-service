@@ -46,8 +46,8 @@ public class LimitRuleRepositoryAdapter implements LimitRuleRepository {
     }
 
     @Override
-    public Optional<LimitRule> findByScope(String scopeType, String scopeKey) {
-        return jpa.findByScopeTypeAndScopeKey(scopeType, scopeKey)
+    public Optional<LimitRule> findByScope(LimitScopeType scopeType, String scopeKey) {
+        return jpa.findByScopeTypeAndScopeKey(scopeType.name(), scopeKey)
                 .map(this::toDomain);
     }
 

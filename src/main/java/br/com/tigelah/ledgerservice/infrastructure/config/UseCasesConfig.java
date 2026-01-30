@@ -1,10 +1,7 @@
 package br.com.tigelah.ledgerservice.infrastructure.config;
 
 import br.com.tigelah.ledgerservice.application.handlers.AuthorizationEventHandler;
-import br.com.tigelah.ledgerservice.application.usecase.CreateAccountUseCase;
-import br.com.tigelah.ledgerservice.application.usecase.GetAvailableCreditUseCase;
-import br.com.tigelah.ledgerservice.application.usecase.RecordHoldFromAuthorizationUseCase;
-import br.com.tigelah.ledgerservice.application.usecase.UpsertLimitRuleUseCase;
+import br.com.tigelah.ledgerservice.application.usecase.*;
 import br.com.tigelah.ledgerservice.domain.ports.AccountRepository;
 import br.com.tigelah.ledgerservice.domain.ports.EntryRepository;
 import br.com.tigelah.ledgerservice.domain.ports.EventPublisher;
@@ -41,5 +38,10 @@ public class UseCasesConfig {
     @Bean
     UpsertLimitRuleUseCase upsertLimitRuleUseCase(LimitRuleRepository repo, Clock clock) {
         return new UpsertLimitRuleUseCase(repo, clock);
+    }
+
+    @Bean
+    GetLimitRuleUseCase getLimitRuleUseCase(LimitRuleRepository repo) {
+        return new GetLimitRuleUseCase(repo);
     }
 }
