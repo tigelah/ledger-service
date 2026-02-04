@@ -21,16 +21,13 @@ class UpsertLimitRuleUseCaseTest {
 
     @Test
     void should_upsert_rule_happy_path() {
-        // arrange
         var repo = mock(LimitRuleRepository.class);
         var clock = Clock.fixed(Instant.parse("2030-01-01T00:00:00Z"), ZoneOffset.UTC);
 
         var uc = new UpsertLimitRuleUseCase(repo, clock);
 
-        // repo retorna exatamente o que recebeu (simula persistência OK)
         when(repo.upsert(any(LimitRule.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // act
         var out = uc.execute(
                 LimitScopeType.USER,
                 "user-123",
@@ -40,7 +37,6 @@ class UpsertLimitRuleUseCaseTest {
                 200_00
         );
 
-        // assert (retorno)
         assertNotNull(out);
         assertNotNull(out.id());
         assertEquals(LimitScopeType.USER, out.scopeType());
@@ -52,13 +48,12 @@ class UpsertLimitRuleUseCaseTest {
         assertEquals(Instant.parse("2030-01-01T00:00:00Z"), out.createdAt());
         assertEquals(Instant.parse("2030-01-01T00:00:00Z"), out.updatedAt());
 
-        // assert (interação)
         var captor = ArgumentCaptor.forClass(LimitRule.class);
         verify(repo, times(1)).upsert(captor.capture());
         var saved = captor.getValue();
 
         assertNotNull(saved.id());
-        assertEquals(out, saved); // se o repo devolve o mesmo objeto, deve bater
+        assertEquals(out, saved);
         verifyNoMoreInteractions(repo);
     }
 

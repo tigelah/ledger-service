@@ -43,16 +43,6 @@ public class EntryRepositoryAdapter implements EntryRepository {
         return false;
     }
 
-
-    private LedgerEntry toDomain(LedgerEntryEntity e) {
-        return new LedgerEntry(
-                e.id, e.accountId, e.paymentId,
-                EntryType.valueOf(e.entryType),
-                EntryDirection.valueOf(e.direction),
-                e.amountCents, e.currency, e.occurredAt, e.correlationId
-        );
-    }
-
     @Override
     public long sumHoldDebits(UUID accountId) {
         return repo.sumHoldDebits(accountId);

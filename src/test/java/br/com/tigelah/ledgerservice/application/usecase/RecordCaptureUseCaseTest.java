@@ -16,35 +16,38 @@ import static org.junit.jupiter.api.Assertions.*;
 class RecordCaptureUseCaseTest {
 
     @Test
-    void records_capture_release_and_updates_counters() {
+    void records_capture_principal_and_release_hold_and_updates_counters_when_no_interest() {
         var entriesList = new ArrayList<LedgerEntry>();
+
         EntryRepository entries = new EntryRepository() {
             boolean capturedExists = false;
+
             @Override public void append(LedgerEntry entry) {
                 entriesList.add(entry);
-                if (entry.entryType() == EntryType.CAPTURE) capturedExists = true;
+                if (entry.entryType() == EntryType.CAPTURE_PRINCIPAL) capturedExists = true;
             }
-
 
             @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
-                return capturedExists && "CAPTURE".equals(entryType);
+                return capturedExists && EntryType.CAPTURE_PRINCIPAL.name().equals(entryType);
             }
+
+            @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) {
+                return true;
+            }
+
             @Override public long sumHoldDebits(UUID accountId) { return 0; }
-
-            @Override
-            public boolean existsHoldForPayment(UUID accountId, UUID paymentId) {
-                return false;
-            }
-
             @Override public long sumCaptureDebits(UUID accountId) { return 0; }
         };
 
         var counterWrites = new AtomicInteger(0);
+
         SpendCounterRepository counters = new SpendCounterRepository() {
             private final Map<String, SpendCounter> store = new HashMap<>();
+
             @Override public Optional<SpendCounter> find(LimitScopeType s, String k, PeriodType p, Instant start) {
                 return Optional.ofNullable(store.get(s+"|"+k+"|"+p+"|"+start));
             }
+
             @Override public SpendCounter save(SpendCounter c) {
                 store.put(c.scopeType()+"|"+c.scopeKey()+"|"+c.periodType()+"|"+c.periodStart(), c);
                 counterWrites.incrementAndGet();
@@ -55,40 +58,149 @@ class RecordCaptureUseCaseTest {
         var clock = Clock.fixed(Instant.parse("2030-01-02T10:00:00Z"), ZoneOffset.UTC);
         var uc = new RecordCaptureUseCase(entries, counters, clock);
 
-        var r = uc.execute(UUID.randomUUID(), UUID.randomUUID(), 10, "BRL", "c1", LimitScopeType.USER, "u1");
+        var accountId = UUID.randomUUID();
+        var paymentId = UUID.randomUUID();
+
+        var r = uc.execute(
+                accountId,
+                paymentId,
+                10,
+                0,
+                "BRL",
+                "c1",
+                LimitScopeType.USER,
+                "u1"
+        );
+
         assertTrue(r.recorded());
         assertFalse(r.idempotent());
 
         assertEquals(2, entriesList.size());
-        assertEquals(EntryType.CAPTURE, entriesList.get(0).entryType());
+        assertEquals(EntryType.CAPTURE_PRINCIPAL, entriesList.get(0).entryType());
+        assertEquals(EntryDirection.DEBIT, entriesList.get(0).direction());
+        assertEquals(10, entriesList.get(0).amountCents());
+
         assertEquals(EntryType.RELEASE_HOLD, entriesList.get(1).entryType());
-        assertEquals(2, counterWrites.get()); // day + month
+        assertEquals(EntryDirection.CREDIT, entriesList.get(1).direction());
+        assertEquals(10, entriesList.get(1).amountCents());
+
+        assertEquals(2, counterWrites.get());
     }
 
     @Test
-    void idempotent_when_capture_already_exists() {
-        EntryRepository entries = new EntryRepository() {
-            @Override public void append(LedgerEntry entry) { fail("should_not_append"); }
-            @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) { return true; }
-            @Override public long sumHoldDebits(UUID accountId) { return 0; }
+    void records_capture_interest_when_interest_is_positive() {
+        var entriesList = new ArrayList<LedgerEntry>();
 
-            @Override
-            public boolean existsHoldForPayment(UUID accountId, UUID paymentId) {
-                return false;
+        EntryRepository entries = new EntryRepository() {
+            boolean capturedExists = false;
+
+            @Override public void append(LedgerEntry entry) {
+                entriesList.add(entry);
+                if (entry.entryType() == EntryType.CAPTURE_PRINCIPAL) capturedExists = true;
             }
 
+            @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
+                return capturedExists && EntryType.CAPTURE_PRINCIPAL.name().equals(entryType);
+            }
+
+            @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) {
+                return true;
+            }
+
+            @Override public long sumHoldDebits(UUID accountId) { return 0; }
             @Override public long sumCaptureDebits(UUID accountId) { return 0; }
         };
 
+        var counterWrites = new AtomicInteger(0);
+
         SpendCounterRepository counters = new SpendCounterRepository() {
-            @Override public Optional<SpendCounter> find(LimitScopeType scopeType, String scopeKey, PeriodType periodType, Instant periodStart) { return Optional.empty(); }
-            @Override public SpendCounter save(SpendCounter counter) { fail("should_not_save_counter"); return counter; }
+            private final Map<String, SpendCounter> store = new HashMap<>();
+
+            @Override public Optional<SpendCounter> find(LimitScopeType s, String k, PeriodType p, Instant start) {
+                return Optional.ofNullable(store.get(s+"|"+k+"|"+p+"|"+start));
+            }
+
+            @Override public SpendCounter save(SpendCounter c) {
+                store.put(c.scopeType()+"|"+c.scopeKey()+"|"+c.periodType()+"|"+c.periodStart(), c);
+                counterWrites.incrementAndGet();
+                return c;
+            }
         };
 
         var clock = Clock.fixed(Instant.parse("2030-01-02T10:00:00Z"), ZoneOffset.UTC);
         var uc = new RecordCaptureUseCase(entries, counters, clock);
 
-        var r = uc.execute(UUID.randomUUID(), UUID.randomUUID(), 10, "BRL", "c1", LimitScopeType.USER, "u1");
+        var accountId = UUID.randomUUID();
+        var paymentId = UUID.randomUUID();
+
+        var r = uc.execute(
+                accountId,
+                paymentId,
+                1000,
+                120,
+                "BRL",
+                "c1",
+                LimitScopeType.USER,
+                "u1"
+        );
+
+        assertTrue(r.recorded());
+        assertFalse(r.idempotent());
+
+        assertEquals(3, entriesList.size());
+
+        assertEquals(EntryType.CAPTURE_PRINCIPAL, entriesList.get(0).entryType());
+        assertEquals(1000, entriesList.get(0).amountCents());
+
+        assertEquals(EntryType.CAPTURE_INTEREST, entriesList.get(1).entryType());
+        assertEquals(120, entriesList.get(1).amountCents());
+
+        assertEquals(EntryType.RELEASE_HOLD, entriesList.get(2).entryType());
+        assertEquals(1000, entriesList.get(2).amountCents());
+
+
+        assertEquals(2, counterWrites.get());
+    }
+
+    @Test
+    void idempotent_when_capture_principal_already_exists() {
+        EntryRepository entries = new EntryRepository() {
+            @Override public void append(LedgerEntry entry) { fail("should_not_append"); }
+
+            @Override public boolean existsEntryForPayment(UUID accountId, UUID paymentId, String entryType) {
+                return EntryType.CAPTURE_PRINCIPAL.name().equals(entryType);
+            }
+
+            @Override public boolean existsHoldForPayment(UUID accountId, UUID paymentId) { return true; }
+
+            @Override public long sumHoldDebits(UUID accountId) { return 0; }
+            @Override public long sumCaptureDebits(UUID accountId) { return 0; }
+        };
+
+        SpendCounterRepository counters = new SpendCounterRepository() {
+            @Override public Optional<SpendCounter> find(LimitScopeType scopeType, String scopeKey, PeriodType periodType, Instant periodStart) {
+                return Optional.empty();
+            }
+            @Override public SpendCounter save(SpendCounter counter) {
+                fail("should_not_save_counter");
+                return counter;
+            }
+        };
+
+        var clock = Clock.fixed(Instant.parse("2030-01-02T10:00:00Z"), ZoneOffset.UTC);
+        var uc = new RecordCaptureUseCase(entries, counters, clock);
+
+        var r = uc.execute(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                10,
+                0,
+                "BRL",
+                "c1",
+                LimitScopeType.USER,
+                "u1"
+        );
+
         assertFalse(r.recorded());
         assertTrue(r.idempotent());
     }

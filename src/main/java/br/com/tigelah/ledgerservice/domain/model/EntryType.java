@@ -3,7 +3,8 @@ package br.com.tigelah.ledgerservice.domain.model;
 public enum EntryType {
     HOLD,
     RELEASE_HOLD,
-    CAPTURE,
-    REFUND,
-    CHARGEBACK
+    CAPTURE_PRINCIPAL,
+    CAPTURE_INTEREST,
+    REFUND_PRINCIPAL,
+    REFUND_INTEREST
 }

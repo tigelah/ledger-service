@@ -1,9 +1,9 @@
 package br.com.tigelah.ledgerservice.domain.ports;
 
-import br.com.tigelah.ledgerservice.domain.model.EntryType;
+
 import br.com.tigelah.ledgerservice.domain.model.LedgerEntry;
 
-import java.util.List;
+
 import java.util.UUID;
 
 public interface EntryRepository {
