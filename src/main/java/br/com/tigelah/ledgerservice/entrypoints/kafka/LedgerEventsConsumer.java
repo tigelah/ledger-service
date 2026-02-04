@@ -2,6 +2,7 @@ package br.com.tigelah.ledgerservice.entrypoints.kafka;
 
 import br.com.tigelah.ledgerservice.application.handlers.AuthorizationEventHandler;
 import br.com.tigelah.ledgerservice.application.handlers.CaptureEventHandler;
+import br.com.tigelah.ledgerservice.application.handlers.SettlementEventHandler;
 import br.com.tigelah.ledgerservice.infrastructure.messaging.Topics;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,17 +22,20 @@ public class LedgerEventsConsumer {
     private final ObjectMapper mapper;
     private final AuthorizationEventHandler authorizationHandler;
     private final CaptureEventHandler captureHandler;
+    private final SettlementEventHandler settlementHandler;
 
     public LedgerEventsConsumer(ObjectMapper mapper,
                                 AuthorizationEventHandler authorizationHandler,
-                                CaptureEventHandler captureHandler) {
+                                CaptureEventHandler captureHandler,
+                                SettlementEventHandler settlementHandler) {
         this.mapper = mapper;
         this.authorizationHandler = authorizationHandler;
         this.captureHandler = captureHandler;
+        this.settlementHandler = settlementHandler;
     }
 
     @KafkaListener(
-            topics = { Topics.PAYMENT_AUTHORIZED, Topics.PAYMENT_CAPTURED },
+            topics = { Topics.PAYMENT_AUTHORIZED, Topics.PAYMENT_CAPTURED, Topics.SETTLEMENT_COMPLETED },
             groupId = "${spring.kafka.consumer.group-id:ledger-service}"
     )
     @Transactional
@@ -43,10 +47,9 @@ public class LedgerEventsConsumer {
             var eventId = UUID.fromString(root.path("eventId").asText(UUID.randomUUID().toString()));
             var occurredAt = parseInstant(root.path("occurredAt").asText(null));
             var correlationId = root.path("correlationId").asText("n/a");
-
             var paymentId = UUID.fromString(root.path("paymentId").asText());
             var accountId = UUID.fromString(root.path("accountId").asText());
-            var amountCents = root.path("amountCents").asLong();
+            var amountCents = root.path("amountCents").asLong(0);
             var currency = root.path("currency").asText("BRL");
 
             if (Topics.PAYMENT_AUTHORIZED.equals(type)) {
@@ -59,9 +62,28 @@ public class LedgerEventsConsumer {
 
             if (Topics.PAYMENT_CAPTURED.equals(type)) {
                 long interestCents = root.path("interestCents").asLong(0);
+                String userId = root.path("userId").asText("");
+                String panHash = root.path("panHash").asText("");
+
                 captureHandler.onPaymentCaptured(
                         eventId, occurredAt, correlationId,
                         paymentId, accountId, amountCents, interestCents, currency
+                );
+                return;
+            }
+
+            if (Topics.SETTLEMENT_COMPLETED.equals(type)) {
+                long feeCents = root.path("feeCents").asLong(0);
+                long netCents = root.path("netCents").asLong();
+
+                settlementHandler.onSettlementCompleted(
+                        paymentId,
+                        accountId,
+                        currency,
+                        feeCents,
+                        netCents,
+                        correlationId,
+                        occurredAt
                 );
                 return;
             }
